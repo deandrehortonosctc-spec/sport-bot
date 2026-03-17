@@ -1,89 +1,215 @@
-# sports-bet
+# ⚡ ODDS HUNTER - Professional Sports Betting Arbitrage Detection
 
-Simple script to fetch odds from The Odds API and detect basic 2-way arbitrage opportunities.
+**Enterprise-grade arbitrage detection dashboard for all major sports and sportsbooks**
 
-Prerequisites
+![Professional Design](https://img.shields.io/badge/Design-Professional-teal) ![All Sports](https://img.shields.io/badge/Sports-All%20Major-blue) ![Multi-Book](https://img.shields.io/badge/Sportsbooks-8%2B-purple)
 
+---
+
+## 🎯 Features
+
+### 🏆 **Comprehensive Sports Coverage**
+- NFL, NBA, MLB, NHL, MLS, Premier League, and 100+ more sports
+- All major betting markets (Head-to-Head, Spreads, Totals, Props)
+- Real-time odds from 8+ sportsbooks (DraftKings, FanDuel, BetMGM, Caesars, PointsBet, and more)
+
+### 💎 **Professional UI Design**
+- **Studio-quality interface** — inspired by Pikkit & Action app
+- **Team/Player Photo Integration** — visual match previews with team logos
+- **Geometric Design** — modern gradient backgrounds with subtle geometric art elements
+- **Gray Professional Theme** — elegant color palette with teal accents and cyan highlights
+- **Modern Typography** — Space Mono monospace + Inter sans-serif fonts for readability
+- **Big Popping Results Display** — large American odds format (+/-) with instant visual feedback
+
+### 🎨 **Individual Game Cards**
+- Team logos and names prominently displayed
+- American odds format (e.g., +150, -120) with best odds highlighted
+- Arbitrage value clearly shown with profit in USD and ROI percentage
+- All competing sportsbook odds in a comparative grid below each match
+- Hover effects for interactive browsing
+
+### 📊 **Real-Time Analytics**
+- Metrics dashboard: Total Opportunities, Average Profit, Max Profit, Average ROI
+- Line movement tracking across sportsbooks over time
+- Historical data storage in CSV format
+- Export results to CSV for further analysis
+
+### 🔐 **Enterprise Features**
+- Environment variable support for secure API key management
+- Multi-region support (US, EU, UK)
+- Configurable profit thresholds
+- Auto-refresh with custom TTL
+- Professional error handling and timeout management
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
 - Python 3.8+
-- Install dependencies:
+- The Odds API key (free tier available: https://the-odds-api.com)
 
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/sports-bet.git
+cd sports-bet
+```
+
+2. Install dependencies:
 ```powershell
 python -m pip install -r requirements.txt
 ```
 
-Usage
-
-Set your API key via environment variable or pass with `--api-key`.
-
-Examples:
-
+3. Set your API key (choose one):
 ```powershell
-$env:ODDS_API_KEY="YOUR_API_KEY"
-python app.py --sport basketball_nba --region us --markets h2h --stake 100
+# Option A: Environment variable
+$env:ODDS_API_KEY="YOUR_API_KEY_HERE"
 
-# Save results (CSV) even if empty
-$env:ODDS_API_KEY="YOUR_API_KEY"
-python app.py --sport basketball_nba --region us --markets h2h --stake 100 --save-csv arbs.csv
+# Option B: Streamlit secrets file (.streamlit/secrets.toml)
+# ODDS_API_KEY = "YOUR_API_KEY_HERE"
 ```
 
-CLI options
-
-- `--api-key`: Your The Odds API key (or set `ODDS_API_KEY` env var)
-- `--sport`: Sport key (default: `basketball_nba`)
-- `--region`: Region (default: `us`)
-- `--markets`: Market (default: `h2h`)
-- `--stake`: Total stake used to compute recommended stakes (default: `100`)
-- `--save-csv`: Optional path to save found opportunities as CSV
-
-Next steps
-
-- Add a simple CSV save (implemented).
-- Build a web dashboard (Streamlit or Flask) to visualize live odds — ask if you prefer Streamlit.
-- Add a simple prediction model (start with logistic regression or XGBoost) — discuss available data and target.
-
-Run the Streamlit dashboard
-
-1. Ensure dependencies are installed:
+### Running the Dashboard
 
 ```powershell
-python -m pip install -r requirements.txt
-```
-
-2. Start the dashboard (recommended):
-
-```powershell
-# from project root
 python -m streamlit run streamlit_app.py
 ```
 
-3. Open the Local URL shown in the console (usually http://localhost:8501).
+The dashboard will open at `http://localhost:8501`
 
-Notes
+---
 
-- The dashboard reuses the CLI functions in `app.py` and allows CSV download.
-- To run headless on a specific port:
+## 📖 Usage
+
+### CLI Tool (app.py)
 
 ```powershell
-python -m streamlit run streamlit_app.py --server.port 8501 --server.headless true
+# Basic usage
+$env:ODDS_API_KEY="YOUR_KEY"
+python app.py --sport basketball_nba --region us --markets h2h --stake 100
+
+# With CSV export
+python app.py --sport americanfootball_nfl --region us --markets h2h,spreads --save-csv nfl_arbs.csv
 ```
 
-Data Logging & Analytics
+**Available Options:**
+- `--api-key`: Your Odds API key (or use env var)
+- `--sport`: Sport key (e.g., basketball_nba, americanfootball_nfl)
+- `--region`: Region (us, eu, uk, au)
+- `--markets`: Comma-separated markets (h2h, spreads, totals)
+- `--stake`: Total stake for calculations (default: 100)
+- `--save-csv`: Save results to CSV file
 
-The dashboard automatically captures and stores:
+### Web Dashboard (streamlit_app.py)
 
-- **Arbitrage snapshots** — saved to `data/arbs_{timestamp}.csv` and `data/arbs_master.csv`
-- **Detailed bookmaker odds** — saved to `data/odds_detailed.csv` for line movement tracking
-  - Includes: sport, teams, team, bookmaker, market, odds, timestamp
+1. **Select Sport** — Dynamic dropdown with all available sports
+2. **Choose Market** — Head-to-Head, Spreads, Totals, or multiple
+3. **Set Parameters** — Stake amount, max arbitrage threshold
+4. **Search Arbitrage** — Scans all sportsbooks in real-time
+5. **View Results** — Professional card layout with team photos, odds, and profit
+6. **Export Data** — Download opportunities as CSV
 
-View trends in the dashboard's **Analytics** section (requires multiple snapshots).
+---
 
-Deployment
+## 🎨 Design Highlights
 
-For free online deployment, see [DEPLOY.md](DEPLOY.md) — quickstart for Streamlit Cloud.
+### Color Scheme
+- **Primary**: Teal Accent (#14b8a6)
+- **Background**: Deep Navy (#0f0f1e to #1a1a2e)
+- **Secondary**: Purple (#8b5cf6)
+- **Text**: Light Gray (#e5e7eb)
 
-Roadmap
+### Typography
+- Headers: Space Mono (monospace, 700 weight)
+- Body: Inter (sans-serif, 300-600 weight)
+- Odds: Space Mono (for consistency and professional look)
 
-- ✅ Phase 1: Deploy on Streamlit Cloud
-- 🔄 Phase 2: Enhanced data logging (bookmaker, line movement)
-- 🚀 Phase 3: Prediction model (XGBoost on historical arb outcomes)
-- 🌍 Phase 4: Production deployment (Flask + React + PostgreSQL)
+### Geometric Art
+- Circular gradient backgrounds (fixed positioning, low opacity)
+- Triangular design elements
+- Smooth transitions and hover states
+- Modern border-radius and shadows
+
+---
+
+## 📊 Data Storage
+
+The app automatically stores:
+
+- **Arbitrage Snapshots** → `data/arbs_{timestamp}.csv` + `data/arbs_master.csv`
+- **Bookmaker-Level Odds** → `data/odds_detailed.csv` (for line movement analysis)
+- **Fields Tracked:**
+  - Sport, Teams, Team Name, Bookmaker, Market Type, Odds, Timestamp
+
+---
+
+## 🌐 Deployment (Streamlit Cloud)
+
+**Free deployement** on Streamlit Cloud. See [DEPLOY.md](DEPLOY.md) for step-by-step instructions.
+
+Quick setup:
+1. Push code to GitHub
+2. Go to https://share.streamlit.app
+3. Connect GitHub repo
+4. Add API key via Streamlit secrets
+5. Live at `https://YOUR_USERNAME-sports-bet.streamlit.app`
+
+---
+
+## 🗺️ Roadmap
+
+| Phase | Status | Task |
+|-------|--------|------|
+| ✅ **Phase 1** | Complete | Professional UI Design, All Sports, Multi-Sportsbook Display, Team Photos |
+| ✅ **Phase 2** | Complete | Streamlit Cloud Deployment, Data Logging, Line Movement Tracking |
+---
+
+## ❓ FAQ
+
+**Q: Why am I not seeing any arbitrage?**
+- Real arbitrage is rare due to market efficiency. The app finds legitimate opportunities, but they may only exist for seconds.
+- Try different sports, leagues, or regions where odds lines are less efficient.
+
+**Q: Can I use this for betting?**
+- Use at your own risk. Arbitrage works in theory but sportsbooks may limit/close accounts that consistently exploit it.
+- This tool is educational and for research purposes.
+
+**Q: How often should I check for arbitrage?**
+- The dashboard auto-refreshes every 60 seconds by default. You can adjust in settings.
+
+**Q: What if I get "API limits exceeded"?**
+- Free tier is 500 requests/month. Consider upgrading or spreading API calls over time.
+
+---
+
+## 👨‍💻 Contributing
+
+Contributions welcome! Please:
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+MIT License — See LICENSE file for details
+
+---
+
+## 🙋 Support
+
+- **Issues?** Open a GitHub Issue
+- **Questions?** Check the FAQ or open a Discussion
+- **API Issues?** Visit https://the-odds-api.com/status
+
+---
+
+**Made with ❤️ by the Odds Hunter Team**
+
+*Professional arbitrage detection. Enterprise-grade design. Completely free.*
+
