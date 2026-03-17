@@ -1,4 +1,4 @@
-import os
+mport os
 import json
 import hashlib
 from datetime import datetime
@@ -6,6 +6,7 @@ from typing import Dict, List
 import streamlit as st
 import pandas as pd
 import requests
+import random
 
 from app import get_odds, find_arbitrage, compute_stakes
 from data_store import save_snapshot, save_detailed_odds
@@ -17,157 +18,132 @@ st.set_page_config(page_title="Chegy Bets - Smart Arbitrage Betting", layout="wi
 # ============================================================================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 * {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-body {
-    background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%);
-    overflow-x: hidden;
+html, body {
+    background: #f8f9fa;
+    color: #1a1a1a;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: #1a1a1a;
+    letter-spacing: -0.3px;
 }
 
 .main {
-    background: transparent;
+    background: #f8f9fa;
 }
 
 .block-container {
-    padding-top: 0;
+    max-width: 1400px;
+    padding-top: 2rem;
     padding-bottom: 3rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
-/* Hero Section */
+/* Hero Section - Clean Professional */
 .hero-section {
-    background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1));
-    border-left: 5px solid #6366f1;
-    border-radius: 12px;
-    padding: 40px;
+    background: white;
+    border-radius: 16px;
+    padding: 48px;
     margin-bottom: 40px;
-    box-shadow: 0 8px 32px rgba(99,102,241,0.15);
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(139,92,246,0.1), transparent);
-    pointer-events: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border-top: 4px solid #6366f1;
 }
 
 .hero-title {
-    font-size: 3.5em;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 10px;
-    font-weight: 900;
-    letter-spacing: -1px;
+    font-size: 2.8em;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .hero-subtitle {
-    font-size: 1.2em;
-    color: #a0a0b0;
-    font-weight: 300;
-    letter-spacing: 0.5px;
+    font-size: 1.05em;
+    color: #666;
+    font-weight: 400;
+    letter-spacing: 0px;
 }
 
 /* Game Card - Professional */
 .game-card {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    border: 1px solid rgba(99,102,241,0.3);
-    border-radius: 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     padding: 24px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
     position: relative;
-    overflow: hidden;
 }
 
 .game-card:hover {
     border-color: #6366f1;
-    box-shadow: 0 20px 60px rgba(99,102,241,0.2);
-    transform: translateY(-4px);
-}
-
-.game-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #6366f1, transparent);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.12);
+    transform: translateY(-2px);
 }
 
 .team-section {
     text-align: center;
-    padding: 20px;
+    padding: 16px;
 }
 
 .team-image {
     width: 100%;
-    max-width: 120px;
-    height: 120px;
+    max-width: 100px;
+    height: 100px;
     object-fit: contain;
     margin-bottom: 12px;
-    filter: drop-shadow(0 4px 12px rgba(20,184,166,0.2));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
     transition: all 0.3s ease;
 }
 
 .team-image:hover {
     transform: scale(1.05);
-    filter: drop-shadow(0 8px 16px rgba(20,184,166,0.4));
 }
 
 .team-name {
-    font-size: 1.1em;
-    color: #e0e0e0;
+    font-size: 1em;
+    color: #1a1a1a;
     font-weight: 600;
     margin-bottom: 8px;
 }
 
 .odds-display {
-    background: rgba(20,184,166,0.1);
-    border: 2px solid #14b8a6;
-    border-radius: 12px;
-    padding: 16px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px;
     margin-top: 12px;
 }
 
 .odds-value {
-    font-size: 2.2em;
-    color: #14b8a6;
-    font-family: 'Space Mono', monospace;
+    font-size: 1.8em;
+    color: #6366f1;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .odds-label {
-    font-size: 0.85em;
-    color: #a0a0b0;
+    font-size: 0.8em;
+    color: #666;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
+    font-weight: 600;
 }
 
 /* Bookmaker Grid */
 .bookmaker-card {
-    background: rgba(20,184,166,0.05);
-    border: 1px solid rgba(20,184,166,0.2);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
     border-radius: 10px;
     padding: 16px;
     text-align: center;
@@ -175,57 +151,58 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bookmaker-card:hover {
-    background: rgba(20,184,166,0.1);
-    border-color: #14b8a6;
+    background: #f3f4f6;
+    border-color: #6366f1;
 }
 
 .bookmaker-name {
-    font-size: 0.9em;
-    color: #a0a0b0;
+    font-size: 0.85em;
+    color: #666;
     margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 600;
 }
 
 .bookmaker-odds {
-    font-size: 1.5em;
-    color: #14b8a6;
-    font-family: 'Space Mono', monospace;
+    font-size: 1.4em;
+    color: #6366f1;
     font-weight: 700;
 }
 
 /* Metrics */
 .metric-card {
-    background: linear-gradient(135deg, rgba(20,184,166,0.1), rgba(139,92,246,0.1));
-    border-left: 4px solid #14b8a6;
-    border-radius: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #6366f1;
+    border-radius: 10px;
     padding: 20px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .metric-value {
-    font-size: 2em;
-    color: #14b8a6;
+    font-size: 1.8em;
+    color: #6366f1;
     font-weight: 700;
-    font-family: 'Space Mono', monospace;
 }
 
 .metric-label {
-    font-size: 0.85em;
-    color: #a0a0b0;
+    font-size: 0.8em;
+    color: #666;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     margin-top: 8px;
+    font-weight: 600;
 }
 
 /* Status Badges */
 .badge-success {
-    background: rgba(16,185,129,0.2);
-    border: 1px solid #10b981;
-    color: #10b981;
-    padding: 8px 16px;
-    border-radius: 20px;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 10px 18px;
+    border-radius: 8px;
     font-size: 0.9em;
     font-weight: 600;
     display: inline-block;
@@ -233,11 +210,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .badge-empty {
-    background: rgba(239,68,68,0.2);
-    border: 1px solid #ef4444;
-    color: #ef4444;
-    padding: 8px 16px;
-    border-radius: 20px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 10px 18px;
+    border-radius: 8px;
     font-size: 0.9em;
     font-weight: 600;
     display: inline-block;
@@ -246,7 +223,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Divider */
 .divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(20,184,166,0.3), transparent);
+    background: #e5e7eb;
     margin: 30px 0;
 }
 
@@ -261,36 +238,117 @@ h1, h2, h3, h4, h5, h6 {
 .geo-circle-1 {
     top: 5%;
     right: 5%;
-    width: 300px;
-    height: 300px;
-    border: 2px solid #14b8a6;
-    border-radius: 50%;
 }
 
-.geo-circle-2 {
-    bottom: 10%;
-    left: 5%;
-    width: 400px;
-    height: 400px;
-    border: 2px solid #8b5cf6;
-    border-radius: 50%;
+/* Form Elements */
+input[type="password"],
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    font-size: 0.95em !important;
+    font-family: 'Inter', sans-serif !important;
+    background: white !important;
+    color: #1a1a1a !important;
 }
 
-.geo-triangle {
-    top: 50%;
-    right: 10%;
-    width: 0;
-    height: 0;
-    border-left: 200px solid transparent;
-    border-right: 200px solid transparent;
-    border-bottom: 300px solid #14b8a6;
+input[type="password"]:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1) !important;
+}
+
+/* Buttons */
+.stButton > button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+}
+
+.stButton > button:hover {
+    background: #4f46e5;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+/* Sidebar */
+.sidebar .sidebar-content {
+    background: #f8f9fa;
+}
+
+.sidebar .stSubheader {
+    color: #1a1a1a;
+    font-weight: 700;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding: 12px 20px;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    color: #666;
+}
+
+.stTabs [aria-selected="true"] {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+}
+
+/* Select Boxes */
+.stMultiSelect [data-baseweb="tag"] {
+    background: #6366f1 !important;
+    color: white !important;
+    border-radius: 6px !important;
+}
+
+/* Spinner */
+.stSpinner {
+    color: #6366f1 !important;
+}
+
+/* Success/Error Messages */
+.stSuccess {
+    background: #f0fdf4 !important;
+    color: #166534 !important;
+    border: 1px solid #86efac !important;
+    border-radius: 8px !important;
+}
+
+.stError {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 8px !important;
+}
+
+.stWarning {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border: 1px solid #fde047 !important;
+    border-radius: 8px !important;
+}
+
+.stInfo {
+    background: #f0f9ff !important;
+    color: #0c4a6e !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 8px !important;
 }
 </style>
-
-<!-- Geometric background elements -->
-<div class="geo-element geo-circle-1"></div>
-<div class="geo-element geo-circle-2"></div>
-<div class="geo-triangle"></div>
 """, unsafe_allow_html=True)
 
 # ============================================================================
@@ -389,15 +447,29 @@ TEAM_LOGOS = {
 }
 
 def display_professional_game_card(teams: List[str], best_odds: Dict, all_bookmaker_odds: Dict, arb_value: float, profit: float, profit_pct: float):
-    """Display game as professional Pikkit-style card."""
+    """Display game as professional card."""
     away, home = (teams[0], teams[1]) if len(teams) >= 2 else ("Team A", "Team B")
     
-    st.markdown(f"""
+    # Build sportsbooks HTML
+    sportsbooks_html = ""
+    for i, (book_name, odds) in enumerate(all_bookmaker_odds.items()):
+        if i < 4:
+            sportsbooks_html += f"""
+                <div class="bookmaker-card">
+                    <div class="bookmaker-name">{book_name}</div>
+                    <div class="bookmaker-odds">{american_odds(odds)}</div>
+                </div>"""
+    
+    # Get summary
+    summary = generate_bet_summary(teams, arb_value, profit, profit_pct, all_bookmaker_odds)
+    
+    # Build complete card HTML in one go
+    card_html = f"""
     <div class="game-card">
         <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center;">
             <!-- Away Team -->
             <div class="team-section">
-                <img src="{TEAM_LOGOS.get(away, 'https://via.placeholder.com/120')}" class="team-image" onerror="this.style.display='none'">
+                <img src="{TEAM_LOGOS.get(away, 'https://via.placeholder.com/120')}" class="team-image" onerror="this.style.display='none';">
                 <div class="team-name">{away}</div>
                 <div class="odds-display">
                     <div class="odds-label">Best Odds</div>
@@ -406,19 +478,19 @@ def display_professional_game_card(teams: List[str], best_odds: Dict, all_bookma
             </div>
             
             <!-- Match Info & Arbitrage -->
-            <div style="text-align: center; padding: 20px; border-right: 1px solid rgba(20,184,166,0.2); border-left: 1px solid rgba(20,184,166,0.2);">
-                <div style="color: #a0a0b0; font-size: 0.9em; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">vs</div>
-                <div style="background: rgba(20,184,166,0.15); border-radius: 8px; padding: 12px; margin-bottom: 15px;">
-                    <div style="color: #a0a0b0; font-size: 0.8em; text-transform: uppercase;">ARB VALUE</div>
-                    <div style="color: #14b8a6; font-size: 1.8em; font-family: 'Space Mono', monospace; font-weight: 700;">{arb_value:.4f}</div>
+            <div style="text-align: center; padding: 20px; border-right: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb;">
+                <div style="color: #999; font-size: 0.85em; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;">vs</div>
+                <div style="background: #f3f4f6; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e5e7eb;">
+                    <div style="color: #666; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600;">ARB VALUE</div>
+                    <div style="color: #6366f1; font-size: 1.6em; font-weight: 700;">{arb_value:.4f}</div>
                 </div>
-                <div style="color: #10b981; font-size: 1.1em; font-weight: 600;">💰 +${profit:.2f}</div>
-                <div style="color: #8b5cf6; font-size: 0.9em;">{profit_pct:.1f}% ROI</div>
+                <div style="color: #10b981; font-size: 1.1em; font-weight: 700;">💰 +${profit:.2f}</div>
+                <div style="color: #6366f1; font-size: 0.9em; font-weight: 600;">{profit_pct:.1f}% ROI</div>
             </div>
             
             <!-- Home Team -->
             <div class="team-section">
-                <img src="{TEAM_LOGOS.get(home, 'https://via.placeholder.com/120')}" class="team-image" onerror="this.style.display='none'">
+                <img src="{TEAM_LOGOS.get(home, 'https://via.placeholder.com/120')}" class="team-image" onerror="this.style.display='none';">
                 <div class="team-name">{home}</div>
                 <div class="odds-display">
                     <div class="odds-label">Best Odds</div>
@@ -430,22 +502,88 @@ def display_professional_game_card(teams: List[str], best_odds: Dict, all_bookma
         <!-- Sportsbooks Row -->
         <div class="divider"></div>
         <div style="margin-top: 20px;">
-            <div style="color: #a0a0b0; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px;">📊 Best Odds by Sportsbook</div>
+            <div style="color: #666; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 15px; font-weight: 600;">📊 Best Odds by Sportsbook</div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
-    """, unsafe_allow_html=True)
+                {sportsbooks_html}
+            </div>
+        </div>
+        
+        <!-- AI Summary -->
+        <div style="background: #f0f4ff; border-left: 4px solid #6366f1; border-radius: 8px; padding: 14px; margin-top: 16px;">
+            <div style="color: #333; font-size: 0.95em; line-height: 1.6;">
+                {summary}
+            </div>
+        </div>
+    </div>
+    """
     
-    # Show top sportsbooks
-    for i, (book_name, odds) in enumerate(all_bookmaker_odds.items()):
-        if i >= 4:
-            break
-        st.markdown(f"""
-                <div class="bookmaker-card">
-                    <div class="bookmaker-name">{book_name}</div>
-                    <div class="bookmaker-odds">{american_odds(odds)}</div>
-                </div>
-        """, unsafe_allow_html=True)
+    st.markdown(card_html, unsafe_allow_html=True)
+
+# ============================================================================
+# AI BET SUMMARY GENERATOR
+# ============================================================================
+
+def generate_bet_summary(teams: List[str], arb_value: float, profit: float, profit_pct: float, all_bookmaker_odds: Dict) -> str:
+    """Generate AI-like summary explaining why this is a good bet."""
     
-    st.markdown("</div></div>", unsafe_allow_html=True)
+    # Analyze opportunity strength
+    if arb_value < 0.985:
+        strength = "EXTREMELY STRONG"
+        emoji = "🔥"
+    elif arb_value < 0.990:
+        strength = "VERY STRONG"
+        emoji = "⚡"
+    elif arb_value < 0.995:
+        strength = "STRONG"
+        emoji = "💪"
+    else:
+        strength = "GOOD"
+        emoji = "✅"
+    
+    # Analyze profit level
+    if profit > 50:
+        profit_desc = "exceptional profit potential"
+    elif profit > 25:
+        profit_desc = "substantial profit margin"
+    elif profit > 10:
+        profit_desc = "solid profit opportunity"
+    else:
+        profit_desc = "consistent profit opportunity"
+    
+    # Analyze odds discrepancy
+    odds_list = list(all_bookmaker_odds.values())
+    if odds_list:
+        odds_variance = max(odds_list) - min(odds_list)
+        if odds_variance > 0.5:
+            variance_desc = "significant odds variation across sportsbooks"
+        elif odds_variance > 0.2:
+            variance_desc = "notable odds differences between books"
+        else:
+            variance_desc = "consistent odds across major sportsbooks"
+    else:
+        variance_desc = "consistent market pricing"
+    
+    # Analyze ROI
+    if profit_pct > 2.0:
+        roi_desc = f"impressive {profit_pct:.1f}% return"
+    elif profit_pct > 1.0:
+        roi_desc = f"solid {profit_pct:.1f}% return on investment"
+    else:
+        roi_desc = f"reliable {profit_pct:.1f}% guaranteed return"
+    
+    # Build summary
+    team_matchup = f"{teams[0]} vs {teams[1]}" if len(teams) >= 2 else "this matchup"
+    
+    summaries = [
+        f"{emoji} **{strength} Opportunity**: {team_matchup} presents {profit_desc} with {variance_desc}. Arb value of {arb_value:.4f} means virtually risk-free profit.",
+        f"{emoji} **Market Inefficiency Detected**: The {variance_desc} creates a {strength.lower()} arbitrage at {arb_value:.4f}. Expect {roi_desc}.",
+        f"{emoji} **Exceptional Value**: This {strength.lower()} opportunity exploits pricing disparities to guarantee ${profit:.2f} profit ({profit_pct:.1f}% ROI).",
+        f"{emoji} **Smart Money Play**: {strength} arbitrage found on {team_matchup}. The market pricing creates {profit_desc}. Lock in {roi_desc}.",
+        f"{emoji} **Locked-In Profit**: This {strength.lower()} bet eliminates risk. {team_matchup} shows {variance_desc}, guaranteeing ${profit:.2f}.",
+    ]
+    
+    return random.choice(summaries)
+
 
 # ============================================================================
 # AUTHENTICATION PAGES
@@ -455,15 +593,15 @@ def page_auth():
     """Login and signup page for unauthenticated users"""
     st.markdown("""
     <div class="hero-section">
-        <div class="hero-title">💰 CHEGY BETS</div>
-        <div class="hero-subtitle">Professional Arbitrage Detection Across All Major Sports & Sportsbooks</div>
+        <div class="hero-title">💰 Chegy Bets</div>
+        <div class="hero-subtitle">Professional Arbitrage Detection Across All Major Sports</div>
     </div>
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("<div style='text-align: center; margin-top: 40px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
         
         tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
         
@@ -487,7 +625,7 @@ def page_auth():
             
             st.markdown("---")
             st.markdown("""
-            **Test Account:**
+            **Demo Account:**
             - Username: `admin`
             - Password: `chegy2024`
             """)
@@ -533,8 +671,8 @@ def page_dashboard():
     # Hero Section
     st.markdown("""
     <div class="hero-section">
-        <div class="hero-title">💰 CHEGY BETS</div>
-        <div class="hero-subtitle">Professional Arbitrage Detection Across All Major Sports & Sportsbooks</div>
+        <div class="hero-title">💰 Chegy Bets</div>
+        <div class="hero-subtitle">Professional Arbitrage Detection Across All Major Sports</div>
     </div>
     """, unsafe_allow_html=True)
     
